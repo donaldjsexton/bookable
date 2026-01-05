@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gallery_dev
+    username: gallery
+    password: gallery
+
+  flyway:
+    # Keep CRM migrations isolated from the Photo Gallery app's Flyway history table.
+    table: flyway_schema_history_booking_crm
+    create-schemas: true
+    default-schema: booking_crm
+    schemas: booking_crm
+
+  jpa:
+    properties:
+      hibernate:
+        default_schema: booking_crm
+
+server:
+  port: 8085

@@ -1,0 +1,17 @@
+com/example/bookingcrm/application/dto/ClientDtos$ClientDto.class
+com/example/bookingcrm/application/dto/InvoiceDtos$CreateInvoiceCommand.class
+com/example/bookingcrm/application/dto/LeadDtos$CreateLeadCommand.class
+com/example/bookingcrm/application/dto/InvoiceDtos$PaymentDto.class
+com/example/bookingcrm/application/dto/InvoiceDtos$InvoiceDto.class
+com/example/bookingcrm/application/dto/QuoteDtos$LineItem.class
+com/example/bookingcrm/application/dto/EventDtos$EventDto.class
+com/example/bookingcrm/application/dto/LeadDtos$LeadDto.class
+com/example/bookingcrm/application/dto/QuoteDtos$QuoteDto.class
+com/example/bookingcrm/application/dto/InvoiceDtos$RegisterPaymentCommand.class
+com/example/bookingcrm/application/dto/ClientDtos$UpdateClientCommand.class
+com/example/bookingcrm/application/dto/QuoteDtos$SendQuoteCommand.class
+com/example/bookingcrm/application/dto/LeadDtos$UpdateLeadCommand.class
+com/example/bookingcrm/application/dto/LeadDtos$ConvertLeadToEventCommand.class
+com/example/bookingcrm/application/dto/QuoteDtos$GenerateQuoteCommand.class
+com/example/bookingcrm/application/dto/ClientDtos$CreateClientCommand.class
+com/example/bookingcrm/application/dto/QuoteDtos$QuoteLineItemDto.class

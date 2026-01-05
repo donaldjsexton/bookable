@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Booking CRM Console</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Booking CRM</p>
+        <h1>Operations Console</h1>
+        <p class="subtitle">Move through each operational flow with focused screens for client, lead, event, and billing actions.</p>
+      </div>
+      <div class="callout">
+        <h2>Before you start</h2>
+        <ul>
+          <li>Confirm the API base URL and tenant ID.</li>
+          <li>Submit one form at a time to see the response.</li>
+          <li>Check the request payload preview before sending.</li>
+        </ul>
+      </div>
+    </header>
+
+    <nav class="flow-nav" aria-label="Flow pages">
+      <button type="button" class="flow-tab" data-flow-target="clients" aria-selected="true">Clients</button>
+      <button type="button" class="flow-tab" data-flow-target="leads" aria-selected="false">Leads</button>
+      <button type="button" class="flow-tab" data-flow-target="events" aria-selected="false">Events</button>
+      <button type="button" class="flow-tab" data-flow-target="billing" aria-selected="false">Billing</button>
+      <button type="button" class="flow-tab" data-flow-target="workflow" aria-selected="false">Workflow</button>
+    </nav>
+
+    <main class="layout">
+      <section class="content">
+        <section class="flow-panel active" data-flow="clients">
+          <div class="card" style="--delay: 0s;">
+            <div class="card-header">
+              <h2>Clients</h2>
+              <p>Manage client profiles and communication preferences.</p>
+            </div>
+            <form class="stack" data-endpoint="/api/clients" data-method="POST">
+              <h3>Create client</h3>
+              <div class="field-row">
+                <label class="field">First name<input name="firstName" value="Ava" required /></label>
+                <label class="field">Last name<input name="lastName" value="Santos" required /></label>
+              </div>
+              <div class="field-row">
+                <label class="field">Email<input name="email" type="email" value="ava@studio.test" required /></label>
+                <label class="field">Phone<input name="phone" value="555-0134" /></label>
+              </div>
+              <div class="field-row">
+                <label class="field">Preferred channel<input name="preferredChannel" value="EMAIL" /></label>
+                <label class="field">Notes<input name="notes" value="VIP bridal referral" /></label>
+              </div>
+              <div class="actions">
+                <button type="submit">Create client</button>
+              </div>
+            </form>
+
+            <form class="stack" data-endpoint="/api/clients/{clientId}" data-method="PUT">
+              <h3>Update client</h3>
+              <div class="field-row">
+                <label class="field">Client ID<input name="clientId" type="number" min="1" value="1" data-path="true" required /></label>
+                <label class="field">Preferred channel<input name="preferredChannel" value="PHONE" /></label>
+              </div>
+              <div class="field-row">
+                <label class="field">First name<input name="firstName" value="Ava" required /></label>
+                <label class="field">Last name<input name="lastName" value="Santos" required /></label>
+              </div>
+              <div class="field-row">
+                <label class="field">Email<input name="email" type="email" value="ava@studio.test" required /></label>
+                <label class="field">Phone<input name="phone" value="555-0134" /></label>
+              </div>
+              <label class="field">Notes<input name="notes" value="Updated call preference" /></label>
+              <div class="actions">
+                <button type="submit">Update client</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="flow-panel" data-flow="leads">
+          <div class="card" style="--delay: 0.05s;">
+            <div class="card-header">
+              <h2>Leads</h2>
+              <p>Capture new opportunities and qualify them before scheduling.</p>
+            </div>
+            <form class="stack" data-endpoint="/api/leads" data-method="POST">
+              <h3>Create lead</h3>
+              <div class="field-row">
+                <label class="field">Client ID<input name="clientId" type="number" min="1" value="1" data-type="integer" required /></label>
+                <label class="field">Status<input name="status" value="NEW" required /></label>
+              </div>
+              <div class="field-row">
+                <label class="field">Source<input name="source" value="Instagram" /></label>
+                <label class="field">Estimated budget<input name="estimatedBudget" data-type="decimal" value="3200" /></label>
+              </div>
+              <label class="field">Notes<input name="notes" value="Outdoor ceremony prospect" /></label>
+              <div class="actions">
+                <button type="submit">Create lead</button>
+              </div>
+            </form>
+
+            <form class="stack" data-endpoint="/api/leads/{leadId}" data-method="PUT">
+              <h3>Update lead</h3>
+              <div class="field-row">
+                <label class="field">Lead ID<input name="leadId" type="number" min="1" value="1" data-path="true" required /></label>
+                <label class="field">Status<input name="status" value="QUALIFIED" required /></label>
+              </div>
+              <div class="field-row">
+                <label class="field">Source<input name="source" value="Instagram" /></label>
+                <label class="field">Estimated budget<input name="estimatedBudget" data-type="decimal" value="4200" /></label>
+              </div>
+              <label class="field">Notes<input name="notes" value="Sent portfolio and pricing" /></label>
+              <div class="actions">
+                <button type="submit">Update lead</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="flow-panel" data-flow="events">
+          <div class="card" style="--delay: 0.1s;">
+            <div class="card-header">
+              <h2>Events</h2>
+              <p>Lock in dates and transform qualified leads into booked work.</p>
+            </div>
+            <form class="stack" data-endpoint="/api/leads/{leadId}/convert-to-event" data-method="POST">
+              <h3>Convert lead to event</h3>
+              <div class="field-row">
+                <label class="field">Lead ID<input name="leadId" type="number" min="1" value="1" data-path="true" required /></label>
+                <label class="field">Event type<input name="eventType" value="WEDDING" required /></label>
+              </div>
+              <label class="field">Event date<input name="eventDate" type="date" value="2025-06-14" data-type="date" required /></label>
+              <div class="actions">
+                <button type="submit">Convert lead</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="flow-panel" data-flow="billing">
+          <div class="card" style="--delay: 0.15s;">
+            <div class="card-header">
+              <h2>Quotes</h2>
+              <p>Generate quotes with line items and send them to clients.</p>
+            </div>
+            <form class="stack" data-endpoint="/api/quotes" data-method="POST" data-line-items="true">
+              <h3>Generate quote</h3>
+              <div class="field-row">
+                <label class="field">Lead ID<input name="leadId" type="number" min="1" value="1" data-type="integer" /></label>
+                <label class="field">Event ID<input name="eventId" type="number" min="1" value="" data-type="integer" /></label>
+              </div>
+              <div class="field-row">
+                <label class="field">Package ID<input name="packageId" type="number" min="1" value="" data-type="integer" /></label>
+                <label class="field">Valid until<input name="validUntil" type="date" value="2025-04-30" data-type="date" /></label>
+              </div>
+              <div class="line-items">
+                <p class="muted">Line items</p>
+                <div class="line-item-row" data-index="0">
+                  <input name="description" placeholder="Description" value="Full day coverage" />
+                  <input name="quantity" type="number" min="1" value="1" data-type="integer" />
+                  <input name="unitPrice" type="number" min="0" step="0.01" value="2800" data-type="decimal" />
+                  <input name="sortOrder" type="number" min="0" value="1" data-type="integer" />
+                </div>
+                <div class="line-item-row" data-index="1">
+                  <input name="description" placeholder="Description" value="Album design" />
+                  <input name="quantity" type="number" min="1" value="1" data-type="integer" />
+                  <input name="unitPrice" type="number" min="0" step="0.01" value="400" data-type="decimal" />
+                  <input name="sortOrder" type="number" min="0" value="2" data-type="integer" />
+                </div>
+              </div>
+              <div class="actions">
+                <button type="submit">Generate quote</button>
+              </div>
+            </form>
+
+            <form class="stack" data-endpoint="/api/quotes/{quoteId}/send" data-method="POST">
+              <h3>Send quote</h3>
+              <div class="field-row">
+                <label class="field">Quote ID<input name="quoteId" type="number" min="1" value="1" data-path="true" required /></label>
+                <label class="field">Recipient email<input name="recipientEmail" type="email" value="ava@studio.test" required /></label>
+              </div>
+              <div class="actions">
+                <button type="submit">Send quote</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card" style="--delay: 0.2s;">
+            <div class="card-header">
+              <h2>Invoices</h2>
+              <p>Issue invoices and track incoming payments.</p>
+            </div>
+            <form class="stack" data-endpoint="/api/invoices" data-method="POST">
+              <h3>Create invoice</h3>
+              <div class="field-row">
+                <label class="field">Event ID<input name="eventId" type="number" min="1" value="1" data-type="integer" required /></label>
+                <label class="field">Total amount<input name="totalAmount" type="number" min="0" step="0.01" value="3200" data-type="decimal" required /></label>
+              </div>
+              <label class="field">Due date<input name="dueDate" type="date" value="2025-05-15" data-type="date" /></label>
+              <div class="actions">
+                <button type="submit">Create invoice</button>
+              </div>
+            </form>
+
+            <form class="stack" data-endpoint="/api/invoices/{invoiceId}/payments" data-method="POST">
+              <h3>Register payment</h3>
+              <div class="field-row">
+                <label class="field">Invoice ID<input name="invoiceId" type="number" min="1" value="1" data-path="true" required /></label>
+                <label class="field">Amount<input name="amount" type="number" min="0" step="0.01" value="800" data-type="decimal" required /></label>
+              </div>
+              <div class="field-row">
+                <label class="field">Method<input name="method" value="Card" required /></label>
+                <label class="field">Received at<input name="receivedAt" placeholder="2025-03-18T14:30:00Z" data-type="datetime" /></label>
+              </div>
+              <label class="field">Notes<input name="notes" value="Deposit captured" /></label>
+              <div class="actions">
+                <button type="submit">Register payment</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="flow-panel" data-flow="workflow">
+          <div class="card" style="--delay: 0.25s;">
+            <div class="card-header">
+              <h2>Workflow</h2>
+              <p>Open the admin workflow panel for a booking.</p>
+            </div>
+            <div class="stack">
+              <h3>Access workflow</h3>
+              <div class="workflow-table" aria-label="Workflow candidates">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Booking ID</th>
+                      <th>Label</th>
+                      <th>State</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="workflowTableBody">
+                    <tr>
+                      <td colspan="4" class="muted workflow-empty">Enter connection details to load bookings.</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="workflow-pagination">
+                  <button type="button" class="button-secondary" id="workflowPrev" disabled>Previous</button>
+                  <span id="workflowPageMeta" class="muted">Page 1</span>
+                  <button type="button" class="button-secondary" id="workflowNext" disabled>Next</button>
+                </div>
+              </div>
+            </div>
+            <div class="workflow-detail">
+              <div class="workflow-detail-header">
+                <h3>Workflow details</h3>
+                <p class="muted" id="workflowSelectionMeta">No booking selected.</p>
+              </div>
+              <div class="workflow-detail-body">
+                <div id="workflowRoot"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="sidebar">
+        <div class="card" style="--delay: 0.2s;">
+          <div class="card-header">
+            <h2>Connection</h2>
+            <p>All requests include the tenant header.</p>
+          </div>
+          <div class="stack">
+            <label class="field">Base URL<input id="baseUrl" type="url" value="http://localhost:8085" /></label>
+            <label class="field">X-Tenant-Id<input id="tenantId" type="number" min="1" value="1" /></label>
+            <p class="muted">Tip: Keep the base URL aligned with your Spring Boot profile.</p>
+          </div>
+        </div>
+
+        <div class="card output" style="--delay: 0.25s;">
+          <div class="card-header">
+            <h2>Response</h2>
+            <span id="responseStatus" class="badge" data-state="idle">Idle</span>
+          </div>
+          <div class="response-meta" id="responseMeta" role="status" aria-live="polite">Waiting for a request...</div>
+          <textarea id="responseBody" readonly rows="12">No response yet.</textarea>
+          <div class="request-panel">
+            <div class="response-meta" id="requestMeta">Request details will appear here.</div>
+            <textarea id="requestBody" readonly rows="8">No payload yet.</textarea>
+          </div>
+          <div class="actions">
+            <button type="button" class="button-secondary" id="clearResponse">Clear output</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

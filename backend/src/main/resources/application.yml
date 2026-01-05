@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: booking-crm
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/booking_crm}
+    username: ${SPRING_DATASOURCE_USERNAME:booking_crm}
+    password: ${SPRING_DATASOURCE_PASSWORD:booking_crm}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: booking_crm
+        format_sql: true
+        show_sql: false
+
+  flyway:
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
+    locations: classpath:db/migration
+    create-schemas: ${SPRING_FLYWAY_CREATE_SCHEMAS:true}
+    default-schema: ${SPRING_FLYWAY_DEFAULT_SCHEMA:booking_crm}
+    schemas: ${SPRING_FLYWAY_SCHEMAS:booking_crm}
+
+server:
+  port: 8085
+
+# TODO:
+# - Configure OAuth2 resource server (Keycloak) to match the Java Photo Gallery.
+# - Configure tenant resolution strategy (header, subdomain, or token claim).

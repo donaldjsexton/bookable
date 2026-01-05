@@ -1,0 +1,11 @@
+.git
+.gitignore
+backend/target
+backend/.mvn
+backend/.idea
+backend/*.iml
+backend/*.log
+frontend/.idea
+frontend/*.log
+docs
+**/.DS_Store

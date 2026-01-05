@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8085:8085"
+    environment:
+      SERVER_PORT: "8085"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/booking_crm
+      SPRING_DATASOURCE_USERNAME: booking_crm
+      SPRING_DATASOURCE_PASSWORD: booking_crm
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_CREATE_SCHEMAS: "true"
+      SPRING_FLYWAY_SCHEMAS: booking_crm
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: booking_crm
+      POSTGRES_USER: booking_crm
+      POSTGRES_PASSWORD: booking_crm
+    ports:
+      - "5432:5432"
+    volumes:
+      - booking_crm_db:/var/lib/postgresql/data
+
+volumes:
+  booking_crm_db:
