@@ -34,6 +34,10 @@
 
     <main class="layout">
       <section class="content">
+        <div class="active-booking" id="activeBookingBanner" role="status" aria-live="polite">
+          <span class="active-booking__label">Active booking</span>
+          <p class="active-booking__value" id="activeBookingMeta">No booking selected.</p>
+        </div>
         <section class="flow-panel active" data-flow="clients">
           <div class="card" style="--delay: 0s;">
             <div class="card-header">
@@ -225,6 +229,23 @@
         </section>
 
         <section class="flow-panel" data-flow="workflow">
+          <div class="card" style="--delay: 0.22s;">
+            <div class="card-header">
+              <h2>CREATE_BOOKING</h2>
+              <p>Create a new booking in INQUIRY state via workflow.</p>
+            </div>
+            <form class="stack" data-endpoint="/api/workflow/actions/CREATE_BOOKING" data-method="POST" data-skip-booking="true" data-activate-booking="true">
+              <h3>New booking</h3>
+              <div class="field-row">
+                <label class="field">Client name<input name="clientName" value="Alex Morgan" required /></label>
+                <label class="field">Event type<input name="eventType" value="SESSION" required /></label>
+              </div>
+              <label class="field">Event date<input name="eventDate" type="date" value="2025-05-01" data-type="date" required /></label>
+              <div class="actions">
+                <button type="submit">Create booking</button>
+              </div>
+            </form>
+          </div>
           <div class="card" style="--delay: 0.25s;">
             <div class="card-header">
               <h2>Workflow</h2>
@@ -236,7 +257,7 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>Booking ID</th>
+                      <th>Event Date</th>
                       <th>Label</th>
                       <th>State</th>
                       <th>Action</th>

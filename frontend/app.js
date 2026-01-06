@@ -127,6 +127,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearResponse = document.getElementById("clearResponse");
   const flowTabs = Array.from(document.querySelectorAll("[data-flow-target]"));
   const flowPanels = Array.from(document.querySelectorAll(".flow-panel"));
+  const activeBookingBanner = document.getElementById("activeBookingBanner");
+  const activeBookingMeta = document.getElementById("activeBookingMeta");
   const workflowRoot = document.getElementById("workflowRoot");
   const workflowTableBody = document.getElementById("workflowTableBody");
   const workflowPrev = document.getElementById("workflowPrev");
@@ -140,6 +142,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const setStatus = createStatusHandler(responseStatus, responseMeta);
   const forms = Array.from(document.querySelectorAll("form[data-endpoint]"));
+
+  const activeBookingState = {
+    selection: null,
+  };
 
   const setActiveFlow = (flowId) => {
     flowTabs.forEach((tab) => {
@@ -174,6 +180,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const tenantId = getTrimmedValue(tenantIdInput);
     const method = (form.dataset.method || "POST").toUpperCase();
     const payload = buildPayload(form);
+    const skipBookingRequirement = form.dataset.skipBooking === "true";
+    const activateBookingOnSuccess = form.dataset.activateBooking === "true";
 
     if (!baseUrl) {
       setStatus("error", "Base URL is required.");
@@ -182,6 +190,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!tenantId) {
       setStatus("error", "Tenant ID is required.");
+      return;
+    }
+
+    if (method !== "GET" && method !== "HEAD" && !activeBookingState.selection && !skipBookingRequirement) {
+      setStatus("error", "Select an active booking in the Workflow table before making changes.");
       return;
     }
 
@@ -224,9 +237,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const contentType = response.headers.get("content-type") || "";
       let bodyText = "";
 
+      let parsedJson = null;
       if (contentType.includes("application/json")) {
-        const json = await response.json();
-        bodyText = formatJson(json);
+        parsedJson = await response.json();
+        bodyText = formatJson(parsedJson);
       } else {
         bodyText = await response.text();
       }
@@ -236,6 +250,21 @@ document.addEventListener("DOMContentLoaded", () => {
       responseMeta.textContent = statusLabel;
       responseStatus.dataset.state = response.ok ? "success" : "error";
       responseStatus.textContent = response.ok ? "Success" : "Failed";
+
+      const bookingId = parsedJson ? parsedJson.bookingId ?? parsedJson.id : null;
+      if (response.ok && activateBookingOnSuccess && bookingId) {
+        activeBookingState.selection = {
+          id: bookingId,
+          label: parsedJson.label || `Booking ${bookingId}`,
+          state: parsedJson.state || "INQUIRY",
+        };
+        updateActiveBookingMeta();
+        updateWorkflowSelection(activeBookingState.selection);
+        renderWorkflowPanel();
+        workflowState.pageParam = 1;
+        workflowState.pageLabel = 1;
+        fetchWorkflowPage(1);
+      }
     } catch (error) {
       responseBody.value = error instanceof Error ? error.message : String(error);
       responseStatus.dataset.state = "error";
@@ -245,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (submitButton) {
         submitButton.disabled = false;
       }
+      updateBookingRequiredForms();
     }
   };
 
@@ -275,15 +305,48 @@ document.addEventListener("DOMContentLoaded", () => {
     clearResponse.addEventListener("click", resetResponse);
   }
 
+  const updateActiveBookingMeta = () => {
+    if (!activeBookingMeta || !activeBookingBanner) {
+      return;
+    }
+    if (!activeBookingState.selection) {
+      activeBookingMeta.textContent = "No booking selected.";
+      activeBookingBanner.dataset.state = "empty";
+      updateBookingRequiredForms();
+      return;
+    }
+
+    const selection = activeBookingState.selection;
+    activeBookingMeta.textContent = `Booking ${selection.id}: ${selection.label} (${selection.state})`;
+    activeBookingBanner.dataset.state = "active";
+    updateBookingRequiredForms();
+  };
+
+  const updateBookingRequiredForms = () => {
+    forms.forEach((form) => {
+      const method = (form.dataset.method || "POST").toUpperCase();
+      if (form.dataset.skipBooking === "true") {
+        return;
+      }
+      if (method === "GET" || method === "HEAD") {
+        return;
+      }
+      const submitButtons = Array.from(form.querySelectorAll("button[type='submit']"));
+      submitButtons.forEach((button) => {
+        button.disabled = !activeBookingState.selection;
+      });
+    });
+  };
+
   const updateWorkflowSelection = (selection) => {
     if (!workflowSelectionMeta) {
       return;
     }
     if (!selection) {
-      workflowSelectionMeta.textContent = "No booking selected.";
+      workflowSelectionMeta.textContent = "No active booking selected.";
       return;
     }
-    workflowSelectionMeta.textContent = `Selected booking ${selection.id}: ${selection.label} (${selection.state})`;
+    workflowSelectionMeta.textContent = `Active booking: ${selection.label} (${selection.state})`;
   };
 
   const setWorkflowTableMessage = (message) => {
@@ -316,9 +379,9 @@ document.addEventListener("DOMContentLoaded", () => {
         row.classList.add("workflow-row-active");
       }
 
-      const idCell = document.createElement("td");
-      idCell.textContent = candidate.id;
-      row.appendChild(idCell);
+      const dateCell = document.createElement("td");
+      dateCell.textContent = candidate.eventDate || "TBD";
+      row.appendChild(dateCell);
 
       const labelCell = document.createElement("td");
       labelCell.textContent = candidate.label;
@@ -334,7 +397,8 @@ document.addEventListener("DOMContentLoaded", () => {
       button.className = "button-secondary";
       button.textContent = "Open workflow";
       button.addEventListener("click", () => {
-        workflowState.selected = candidate;
+        activeBookingState.selection = candidate;
+        updateActiveBookingMeta();
         updateWorkflowSelection(candidate);
         renderWorkflowPanel();
         renderWorkflowRows(candidates, candidate.id);
@@ -414,7 +478,6 @@ document.addEventListener("DOMContentLoaded", () => {
     hasNext: false,
     hasPrevious: false,
     pending: false,
-    selected: null,
   };
 
   const updateWorkflowPagination = () => {
@@ -474,7 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
       workflowState.hasNext = pagination.hasNext;
       workflowState.hasPrevious = pagination.hasPrevious;
 
-      renderWorkflowRows(items, workflowState.selected ? workflowState.selected.id : "");
+      renderWorkflowRows(items, activeBookingState.selection ? activeBookingState.selection.id : "");
       updateWorkflowPagination();
     } catch (error) {
       setWorkflowTableMessage("Unable to load workflow candidates.");
@@ -499,7 +562,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!workflowRoot) {
       return;
     }
-    if (!workflowState.selected || !workflowState.selected.id) {
+    if (!activeBookingState.selection || !activeBookingState.selection.id) {
       if (workflowRootInstance) {
         workflowRootInstance.unmount();
         workflowRootInstance = null;
@@ -508,7 +571,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const bookingId = String(workflowState.selected.id);
+    const bookingId = String(activeBookingState.selection.id);
     const baseUrl = baseUrlInput ? getTrimmedValue(baseUrlInput).replace(/\/$/, "") : "";
     const tenantId = tenantIdInput ? getTrimmedValue(tenantIdInput) : "";
 
@@ -549,5 +612,6 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchWorkflowPage(workflowState.pageParam);
   }
 
+  updateActiveBookingMeta();
   resetResponse();
 });

@@ -19,8 +19,27 @@ public final class BookingDtos {
             long tenantId
     ) {}
 
+    public record CreateBookingCommand(
+            long tenantId,
+            long clientId
+    ) {}
+
+    public record CreateWorkflowBookingCommand(
+            long tenantId,
+            String clientName,
+            String eventType,
+            java.time.LocalDate eventDate
+    ) {}
+
     public record BookingWorkflowCandidateDto(
             long id,
+            String label,
+            String state,
+            java.time.LocalDate eventDate
+    ) {}
+
+    public record WorkflowBookingActionResultDto(
+            long bookingId,
             String label,
             String state
     ) {}

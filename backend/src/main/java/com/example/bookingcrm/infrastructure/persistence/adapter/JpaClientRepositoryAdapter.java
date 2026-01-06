@@ -27,6 +27,12 @@ public class JpaClientRepositoryAdapter implements ClientRepository {
         return clients.findByTenantIdAndId(tenantId, clientId).map(JpaClientRepositoryAdapter::toDomain);
     }
 
+    @Override
+    public Optional<Client> findByTenantIdAndName(long tenantId, String firstName, String lastName) {
+        return clients.findByTenantIdAndFirstNameIgnoreCaseAndLastNameIgnoreCase(tenantId, firstName, lastName)
+                .map(JpaClientRepositoryAdapter::toDomain);
+    }
+
     private static ClientEntity toEntity(Client client) {
         Long id = client.id() == 0L ? null : client.id();
         return new ClientEntity(
@@ -56,4 +62,3 @@ public class JpaClientRepositoryAdapter implements ClientRepository {
         );
     }
 }
-

@@ -5,6 +5,9 @@ import com.example.bookingcrm.application.dto.BookingDtos.BookingStateDto;
 import com.example.bookingcrm.application.dto.BookingDtos.BookingStateQuery;
 import com.example.bookingcrm.application.dto.BookingDtos.BookingWorkflowCandidateDto;
 import com.example.bookingcrm.application.dto.BookingDtos.BookingWorkflowCandidatesQuery;
+import com.example.bookingcrm.application.dto.BookingDtos.CreateBookingCommand;
+import com.example.bookingcrm.application.dto.BookingDtos.CreateWorkflowBookingCommand;
+import com.example.bookingcrm.application.dto.BookingDtos.WorkflowBookingActionResultDto;
 import com.example.bookingcrm.application.port.BookingRepository;
 import com.example.bookingcrm.application.port.ClientRepository;
 import com.example.bookingcrm.application.port.EventRepository;
@@ -17,14 +20,18 @@ import com.example.bookingcrm.domain.billing.Quote;
 import com.example.bookingcrm.domain.billing.QuoteStatus;
 import com.example.bookingcrm.domain.booking.Booking;
 import com.example.bookingcrm.domain.booking.BookingContext;
+import com.example.bookingcrm.domain.booking.BookingState;
 import com.example.bookingcrm.domain.booking.BookingStateMachine;
 import com.example.bookingcrm.domain.client.Client;
 import com.example.bookingcrm.domain.event.Event;
+import com.example.bookingcrm.domain.event.EventStatus;
+import com.example.bookingcrm.domain.event.EventType;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class DefaultBookingService implements BookingService {
     private static final DateTimeFormatter WORKFLOW_LABEL_DATE =
@@ -81,6 +88,67 @@ public class DefaultBookingService implements BookingService {
     }
 
     @Override
+    public BookingWorkflowCandidateDto create(CreateBookingCommand command) {
+        Client client = clients.findByTenantIdAndId(command.tenantId(), command.clientId())
+                .orElseThrow(() -> new EntityNotFoundException("Client not found"));
+
+        Booking booking = bookings.save(Booking.newBooking(command.tenantId(), command.clientId()));
+        String clientLabel = client.firstName() + " " + client.lastName();
+        String label = buildWorkflowCandidateLabel(clientLabel, booking, null);
+        LocalDate eventDate = resolveWorkflowEventDate(null, booking);
+        return new BookingWorkflowCandidateDto(booking.id(), label, booking.state().name(), eventDate);
+    }
+
+    @Override
+    public WorkflowBookingActionResultDto createWorkflowBooking(CreateWorkflowBookingCommand command) {
+        ParsedClientName parsedName = parseClientName(command.clientName());
+        Client client = clients.findByTenantIdAndName(command.tenantId(), parsedName.firstName(), parsedName.lastName())
+                .orElseGet(() -> clients.save(Client.newClient(
+                        command.tenantId(),
+                        UUID.randomUUID(),
+                        parsedName.firstName(),
+                        parsedName.lastName(),
+                        null,
+                        null,
+                        null,
+                        null
+                )));
+
+        EventType eventType = EventType.fromText(command.eventType());
+        Event event = events.save(new Event(
+                0L,
+                command.tenantId(),
+                UUID.randomUUID(),
+                client.id(),
+                null,
+                eventType,
+                command.eventDate(),
+                null,
+                null,
+                null,
+                null,
+                EventStatus.INQUIRY,
+                null,
+                null,
+                null
+        ));
+
+        Booking booking = bookings.save(new Booking(
+                0L,
+                command.tenantId(),
+                client.id(),
+                event.id(),
+                null,
+                null,
+                BookingState.INQUIRY,
+                null
+        ));
+        String clientLabel = client.firstName() + " " + client.lastName();
+        String label = buildWorkflowCandidateLabel(clientLabel, booking, event);
+        return new WorkflowBookingActionResultDto(booking.id(), label, booking.state().name());
+    }
+
+    @Override
     public List<BookingWorkflowCandidateDto> listWorkflowCandidates(BookingWorkflowCandidatesQuery query) {
         return bookings.findByTenantId(query.tenantId()).stream()
                 .map(booking -> toWorkflowCandidate(query.tenantId(), booking))
@@ -98,7 +166,8 @@ public class DefaultBookingService implements BookingService {
         }
 
         String label = buildWorkflowCandidateLabel(clientLabel, booking, event);
-        return new BookingWorkflowCandidateDto(booking.id(), label, booking.state().name());
+        LocalDate eventDate = resolveWorkflowEventDate(event, booking);
+        return new BookingWorkflowCandidateDto(booking.id(), label, booking.state().name(), eventDate);
     }
 
     private static String buildWorkflowCandidateLabel(String clientLabel, Booking booking, Event event) {
@@ -117,6 +186,16 @@ public class DefaultBookingService implements BookingService {
         return "TBD";
     }
 
+    private static LocalDate resolveWorkflowEventDate(Event event, Booking booking) {
+        if (event != null) {
+            return event.date();
+        }
+        if (booking.consultDate() != null) {
+            return booking.consultDate();
+        }
+        return null;
+    }
+
     private static String humanizeEnum(Enum<?> value) {
         String raw = value.name().toLowerCase(Locale.ROOT);
         String[] parts = raw.split("_");
@@ -132,6 +211,21 @@ public class DefaultBookingService implements BookingService {
         }
         return builder.length() > 0 ? builder.toString() : value.name();
     }
+
+    private static ParsedClientName parseClientName(String rawName) {
+        String trimmed = rawName == null ? "" : rawName.trim();
+        if (trimmed.isEmpty()) {
+            return new ParsedClientName("Unknown", "Client");
+        }
+        String[] parts = trimmed.split("\\s+");
+        String firstName = parts[0];
+        String lastName = parts.length > 1
+                ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length))
+                : "Client";
+        return new ParsedClientName(firstName, lastName);
+    }
+
+    private record ParsedClientName(String firstName, String lastName) {}
 
     private Event loadEvent(long tenantId, Booking booking) {
         if (booking.eventId() == null) {

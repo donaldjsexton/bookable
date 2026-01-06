@@ -7,5 +7,10 @@ import java.util.Optional;
 
 public interface ClientJpaRepository extends JpaRepository<ClientEntity, Long> {
     Optional<ClientEntity> findByTenantIdAndId(long tenantId, long id);
-}
 
+    Optional<ClientEntity> findByTenantIdAndFirstNameIgnoreCaseAndLastNameIgnoreCase(
+            long tenantId,
+            String firstName,
+            String lastName
+    );
+}
